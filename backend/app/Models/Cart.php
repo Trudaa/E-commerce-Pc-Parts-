@@ -14,18 +14,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
             'product_id',
             'user_id',
             'quantity',
-        
+            'product_variant_id',
         ];
     
-        public function product()
-        {
-            return $this->belongsTo(Product::class);
-          
-        }
         public function user()
         {
             return $this->belongsTo(User::class);
-          
+        }
+        public function product()
+        {
+            return $this->belongsTo(Product::class);
+        }
+        public function product_variant()
+        {
+            return $this->belongsTo(ProductVariant::class);
         }
 
 }

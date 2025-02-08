@@ -100,10 +100,17 @@ class ProductController extends Controller
         $search = $request->input('search');
         $query->where(function ($subQuery) use ($search) {
             $subQuery->where('name', 'like', '%' . $search . '%')
-                     ->orWhere('brand', 'like', '%' . $search . '%');
+                     ->orWhere('brand', 'like', '%' . $search . '%')
+                     ->orWhere('category', 'like', '%' . $search . '%');
         });
     }
 
+    if($request->has('category')) {
+        $category = $request->input('category');
+        $query->where(function ($subQuery) use ($category) {
+            $subQuery->where('category', 'like', '%' . $category . '%');
+        });
+    }
 
     // Paginate results
     $products = $query->select('id', 'name', 'price', 'image', 'brand', 'rating')
@@ -145,33 +152,41 @@ class ProductController extends Controller
         // Fetch the product with all its variants
         $product = Product::with('variants')->find($id);
     
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+    
         // Initialize the variant stock to null
         $variantStock = null;
+        $variantId = null;
+        $variantPrice = null;
     
-        // Check if color and size parameters are provided and not empty
+        // Get color and size from the request
         $color = $request->input('color');
         $size = $request->input('size');
     
+        // If a specific color and size are provided, find the matching variant
         if (!empty($color) || !empty($size)) {
-            // Find the specific variant matching the color and size, considering empty values
             $specificVariant = $product->variants->firstWhere(function ($variant) use ($color, $size) {
                 return (empty($color) || $variant->color === $color) &&
                        (empty($size) || $variant->size === $size);
             });
-    
-            // If the specific variant exists, get its stock
             if ($specificVariant) {
                 $variantStock = $specificVariant->stock;
+                $variantId = $specificVariant->id;
+                $variantPrice = $specificVariant->price_override;
             }
         }
-
-   
+    
+        // Calculate the total stock for all variants of the product
         $totalStock = $product->variants->sum('stock');
-
+    
         return response()->json([
             'product' => $product,
             'variant_stock' => $variantStock,
-            'total_stock' => $totalStock
+            'total_stock' => $totalStock,
+            'variant_id' => $variantId,
+            'variant_price' =>$variantPrice
         ]);
     }
     
