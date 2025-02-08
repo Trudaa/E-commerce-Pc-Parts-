@@ -1,6 +1,9 @@
-import { useParams } from "react-router-dom"
 import axiosApi from "../axiosApi"
-import { useEffect, useState } from "react"
+import {  useState } from "react"
+import { useStateContext } from "../context/ContextProvider";
+import { SelectVariation } from "../utils/SelectVariation";
+import { useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 
 type Product = {
     id: number;
@@ -15,52 +18,66 @@ type Product = {
   };
 
 type Variant ={
+    id: number
     color: string;
     size: string;
     stock: number
+    price_override: number
 }
+
   
 export const ViewProduct = () => {
+   
+  const {user,getCartCount} = useStateContext()
+   const userId =  user?.id
 
-    const params = useParams()
-    const id = params.id
-    
+   const params = useParams()
+   const productId = Number(params.id)
+  
     const [productInfo, setProductInfo] = useState<Product|null>(null)
     const [totalStock, setTotalStock] = useState(0)
     const [quantity, setQuantity] = useState<number>(1)
     const [selectedColor, setSelectedColor] = useState("");
     const [selectedSize, setSelectedSize] = useState("");
+    const [variantId, setVariantId] = useState<number | null>(null)
+    const [productPrice,setProductPrice] = useState<number|null>(null)
     
-    
-    useEffect (() => {
-        getProduct()
-    }, [selectedColor,selectedSize])
-     const getProduct = () => {
-      axiosApi.get (`/products/${id}`, {
-        params:{
-          color:selectedColor,
-           size:selectedSize
-        }})
-      .then((response)=>{
-        setProductInfo(response.data.product)
-        console.log(response.data)
-        setTotalStock(response.data.variant_stock?? response.data.total_stock)    
-        console.log("variant stock",response.data.variant_stock) 
-        console.log("total stock",response.data.total_stock)
+    const handleAddToCart = () => {
+      if(!user?.id){
+        Swal.fire({
+          icon: 'error',
+          title: 'Please login to add to cart',
+          showConfirmButton: false,
+          timer: 1500
+        })
+        return
+      }
+      axiosApi.post("/carts", {
+        productId: productInfo?.id,
+        quantity: quantity,
+        variantId: variantId,
+        userId : userId,
+        variantStock: totalStock
       })
-      .catch ((error)=>{
+      .then((response) => {
+        console.log(response)
+        getCartCount()
+        Swal.fire({
+          icon: 'success',
+          title: 'Product added to cart',
+          showConfirmButton: false,
+          timer: 1500
+        })
+      })
+      .catch((error) => {
         console.log(error)
+        Swal.fire({
+          icon: 'error',
+          title: error.response.data.message,
+          showConfirmButton: false,
+          timer: 1500
+        })
       })
-    }
-
-    const handleColorSelect = (color: string) => {
-     selectedColor==color? setSelectedColor("") : setSelectedColor(color)
-     setQuantity(1)
-    }
-  
-    const handleSizeSelect = (size: string) => {
-      selectedSize==size? setSelectedSize("") : setSelectedSize(size)
-      setQuantity(1)
     }
 
   return (
@@ -73,75 +90,66 @@ export const ViewProduct = () => {
             src={productInfo?.image}
             alt="Product Image"
             className="rounded-lg w-full h-96 object-cover"
+            style ={{
+              objectPosition: "center",
+            }}
             />
           </div>
-
           <div className="lg:col-span-2">
             <h1 className="text-3xl font-bold mb-3">{productInfo?.name}</h1>
             <div className="text-gray-600 mb-3">{productInfo?.brand.toUpperCase()}</div>
             <div className="flex items-center mb-4">
-             <span className="text-2xl font-semibold text-gray-800">₱{productInfo?.price}</span>
-            
+             <span className="text-2xl font-semibold text-gray-800">₱{productPrice === null? productInfo?.price : productPrice}</span>
             </div>
-            <span className="text-2xl font-semibold text-gray-800">
-              <div className="flex space-x-2 mb-3">
-            {productInfo?.variants.map((variant) => (
-                <span key={variant.color}>
-                  <div 
-                    onClick = {() => handleColorSelect(variant.color)}
-                    className={`w-6 h-6 rounded-full cursor-pointer border ${variant.color === selectedColor ? "border-blue-500" : ""} `}
-                    style={{backgroundColor: variant.color}}>   
-                  </div>
-                </span>
-              ))}
-              </div>
-            </span>
-            <span className=" font-semibold text-gray-800">
-              <div className="flex space-x-2 mb-3">
-            {productInfo?.variants.map((variant) => (
-                <span key={variant.size}>
-                  <div 
-                    onClick = {() => handleSizeSelect(variant.size)}
-                    className={` p-1 px-2 cursor-pointer border  ${variant.size === selectedSize ? "border-blue-500" : ""} `}>
-                    {variant.size}
-                  </div>
-                </span>
-              ))}
-              </div>
-            </span>
-            <div className="flex items-center mb-4">
+            <SelectVariation 
+              setProductInfo={setProductInfo}
+              setTotalStock={setTotalStock}
+              setVariantId={setVariantId}
+              setProductPrice={setProductPrice}
+              setQuantity={setQuantity}
+              setSelectedColor={setSelectedColor}
+              setSelectedSize={setSelectedSize}
+              selectedColor={selectedColor}
+              selectedSize={selectedSize}
+              productId={productId}
+            />
+            {/* Quantity */}
+          <div className="flex items-center mb-4">
               <label htmlFor="quantity" className="mr-2">Quantity:</label>
               <div className="relative flex items-center border border-gray-300 rounded-md px-2 py-1 w-32">
-                <input
-                  type="number"
-                  className=" border-none focus:outline-none w-full"
-                  value={quantity>totalStock?totalStock:quantity}
-                  placeholder={quantity.toString()}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                />
-                <div className="absolute right-0 flex items-center space-x-1 pr-2">
-                  <button
-                    type="button"
-                    className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
-                    onClick={() => setQuantity (quantity - 1)}
-                    disabled={quantity === 1}
-                   
-                  >
-                    -
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
-                    onClick={() => setQuantity(quantity + 1)}
-                    disabled={quantity === totalStock}
-                  >
-                    +
-                  </button>
-                </div>
+                  <input
+                    type="number"
+                    className=" border-none focus:outline-none w-full"
+                    value={quantity>totalStock?totalStock:quantity}
+                    placeholder={quantity.toString()}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                  />
+                  <div className="absolute right-0 flex items-center space-x-1 pr-2">
+                    <button
+                      type="button"
+                      className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
+                      onClick={() => setQuantity (quantity - 1)}
+                      disabled={quantity === 1}
+                    >
+                      -
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
+                      onClick={() => setQuantity(quantity + 1)}
+                      disabled={quantity === totalStock}
+                    >
+                      +
+                    </button>
+                  </div>
               </div>
               <div className="text-gray-600 ml-2"> {totalStock} stock available</div>
             </div>
-           <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4">
+            {/* Add to Cart Button */}
+           <button
+             onClick={handleAddToCart}
+              disabled={!selectedColor || !selectedSize || totalStock === 0}
+             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4 disabled:bg-blue-300 ">
             Add to Cart
            </button>
           </div>
@@ -154,7 +162,6 @@ export const ViewProduct = () => {
             <hr className="border-b "/>
              <div className="p-2">
               <ul className="list-disc pl-5 space-y-2">
-
                 <li>
                   <span className="font-semibold">Nationwide Delivery</span>
                 </li>
