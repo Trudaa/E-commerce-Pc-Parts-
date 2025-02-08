@@ -22,11 +22,11 @@ class AuthController extends Controller
      }
      
      $user = Auth::user();   
-     $token = $user->createToken('main')->plainTextToken;
+     $token = $user->createToken('main');
      
      return response()->json([
-         'user' => $user,
-         'token' => $token
+        'user' => ['name'=> $user->name, 'id' => $user->id],
+         'token' => $token->plainTextToken
      ]);
     }
 
@@ -41,15 +41,15 @@ class AuthController extends Controller
         'role' => 'staff'
     ]);
     
-    $token = $user->createToken('main')->plainTextToken;
+    $token = $user->createToken('main');
     
     return response()->json([
         'user' => $user,
-        'token' => $token
+        'token' => $token->plainTextToken
     ]);
 }
     public function logout(Request $request) {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out']);
     }
 

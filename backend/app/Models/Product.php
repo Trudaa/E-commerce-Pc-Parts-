@@ -20,11 +20,13 @@ class Product extends Model
         'rating',        
     ];
 
+
+
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
     }
-    public function carts()
+    public function cart()
     {
         return $this->hasMany(Cart::class);
     }

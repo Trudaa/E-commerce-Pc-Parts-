@@ -16,14 +16,14 @@ export const Login = ({handleLoginClick,handleModalClick}:LoginProps) => {
     password: ''
   })
  
-  console.log(loginDetails)
+ 
   const handleLogin = (e:any) =>{  
     e.preventDefault()
     axiosApi.post('/login', loginDetails)
     .then((response) =>{
-      window.location.reload()
       localStorage.setItem('token', response.data.token)
       setUserValue(response.data.user)
+      window.location.reload()
     })
     .catch((error)=>{
       Swal.fire({

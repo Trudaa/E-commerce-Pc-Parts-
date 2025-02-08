@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('color');
             $table->string('size');
             $table->integer('stock');
+            $table->decimal('price_override', 8, 2)->nullable()->default(null);
             $table->timestamps();
         });
     }
