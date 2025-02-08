@@ -3,7 +3,6 @@ import axiosApi from "../axiosApi";
 import { SearchFilter } from "../utils/SearchFilter";
 import { ProductTable } from "../utils/ProductTable";
 import { useOutletContext } from "react-router-dom";
-import { AddToCartModal } from "./AddToCartModal";
 
 type Product = {
   id: number;
@@ -33,12 +32,12 @@ type ContextType = {
   handleSearchSubmit: (e: any) => void;
   search: string | null
   triggerSearch: boolean
+  category: string
 }
 
 export const ComponentPage = () => {
 
-  const {search,triggerSearch} = useOutletContext<ContextType>()
-
+  const {search,triggerSearch,category} = useOutletContext<ContextType>()
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,10 +51,6 @@ export const ComponentPage = () => {
   const [sizes, setSizes] = useState<string[]>([]);
   //Top Filter
   const [filterBy, setFilterBy] = useState<string>("BestSelling");
-  //Add to cart Modal
-  const [productId, setProductId] = useState<number | null>(null);
-  const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
-
 
   const getProducts = async() => {
     await axiosApi
@@ -71,6 +66,7 @@ export const ComponentPage = () => {
           sizes: sizes,
           search:search,
           filterBy: filterBy,
+          category: category
         },
       })
       .then((response) => {
@@ -91,19 +87,18 @@ export const ComponentPage = () => {
 
   useEffect(() => {
     getProducts();
-  }, [currentPage,triggerSearch, filterBy]);
+  }, [currentPage,triggerSearch, filterBy,category]);
 
   return (
     <div className="flex flex-col p-1 bg-white min-h-screen px-1">
      
-       <div className="text-2xl font-bold mb-4 text-gray-600 pl-2">Component</div>
+       <div className="text-2xl font-bold mb-4 text-gray-600 pl-2">Component {category!=null? `(${category})` : ""}</div>
      <div className="flex justify-between items-center mb-4 p-2 px-4 shadow-md">
     
       <div className="text-lg font-semibold bg-gray-50">
         <span className="text-gray-600">Products Found:</span> <span className="text-gray-800 italic">{totalResults}</span>
       </div>
       <div className="flex items-center">
-       
         <select
           className="px-4 py-2 rounded-md border border-gray-300"
           value={filterBy}
@@ -134,7 +129,7 @@ export const ComponentPage = () => {
       </div>
 
       <div className="w-full md:w-75 flex-grow">
-        <ProductTable products={products}  setProductId={setProductId} isCartModalOpen={isCartModalOpen} setIsCartModalOpen={setIsCartModalOpen}/>
+        <ProductTable products={products}/>
         <div className="flex justify-center mt-4">
           <button
             className="px-4 py-2 bg-blue-400 rounded-l hover:bg-blue-600 disabled:bg-gray-200"
@@ -154,7 +149,6 @@ export const ComponentPage = () => {
         </div>
       </div>
     </div>
-    {isCartModalOpen && <AddToCartModal productId={productId} setIsCartModalOpen={setIsCartModalOpen} isCartModalOpen={isCartModalOpen} />}
   </div>
   );
 };

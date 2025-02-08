@@ -12,10 +12,6 @@ export const Signup = ({handleLoginClick,handleModalClick}:LoginProps) => {
     password: '',
     password_confirmation: ''
   })
-
-
-  console.log("signupDetails",signupDetails)
-  
   const handleSignup = (e:any) => {
     e.preventDefault()
     axiosApi.post('/signup', signupDetails)

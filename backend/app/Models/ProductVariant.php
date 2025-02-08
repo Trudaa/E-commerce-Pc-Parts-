@@ -15,10 +15,15 @@ class ProductVariant extends Model
         'stock',
         'color',
         'size',
+        'price_override'
     ];
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-    
+    public function cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
+   
 }

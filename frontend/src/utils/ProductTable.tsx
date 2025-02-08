@@ -19,15 +19,10 @@ type Product = {
   
   type ProductTableProps = {
     products: Product[];
-    setProductId: React.Dispatch<React.SetStateAction<number | null>>;
-    isCartModalOpen: boolean
-    setIsCartModalOpen: React.Dispatch<React.SetStateAction<boolean>>
   };
-  export const ProductTable = ({ products, setProductId,isCartModalOpen, setIsCartModalOpen }: ProductTableProps) => {
+  
+  export const ProductTable = ({ products }: ProductTableProps) => {
 
-    const handleProductId = (id: number) => {
-      setProductId(id);
-    };
 
     console.log(products)
 
@@ -54,24 +49,14 @@ type Product = {
               <div className="flex items-center justify-center mt-2">
                 <span className="text-yellow-500">{product.rating}</span>              
               </div>   
-              {product.variants.map((variant) => (
+              {/* {product.variants.map((variant) => (
                <div key={variant.id}>
                  <div>{variant.color}</div>
                  <div>{variant.size}</div>
                </div>
-              ))}
+              ))} */}
               </Link>
               </button>
-              {/* <div className="flex items-center gap-2">
-                <button className="bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded mt-2 ">
-                  Buy Now
-                </button>
-                <button 
-                onClick={() => {handleProductId(product.id), setIsCartModalOpen(!isCartModalOpen)}}
-                className="bg-gray-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded mt-2 ">
-                  Cart
-                </button>
-              </div> */}
             </div>
           ))}
         </div>

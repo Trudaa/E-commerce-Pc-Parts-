@@ -38,7 +38,7 @@ export const AddToCartModal = ({productId,setIsCartModalOpen,isCartModalOpen}:Ad
     axiosApi.get(`/products/${productId}`)
     .then((response) => {
         setProductInfo(response.data.product)
-        console.log(response.data.product)
+     
     })
     .catch((error) => {
         console.log(error)
